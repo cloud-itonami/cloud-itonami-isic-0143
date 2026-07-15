@@ -1,0 +1,12 @@
+{:itonami.blueprint/id "cloud-itonami-0143"
+ :itonami.blueprint/name "Camelid-Raising Operations Coordination"
+ :itonami.blueprint/isic-rev5 "0143"
+ :itonami.blueprint/domain :agriculture/camelid-raising
+ :itonami.blueprint/license "AGPL-3.0-or-later"
+ :itonami.blueprint/social-impact [:animal-welfare :food-security :rural-employment]
+ :itonami.blueprint/governor :camelid-facility-operations-governor
+ :itonami.blueprint/robotics true
+ :itonami.blueprint/required-technologies [:robotics :identity :forms :audit-ledger]
+ :itonami.blueprint/optional-technologies [:telemetry :optimization :dmn :bpmn]
+ :itonami.blueprint/status :public-oss
+ :itonami.blueprint/maturity :implemented}
