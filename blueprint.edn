@@ -9,4 +9,47 @@
  :itonami.blueprint/required-technologies [:robotics :identity :forms :audit-ledger]
  :itonami.blueprint/optional-technologies [:telemetry :optimization :dmn :bpmn]
  :itonami.blueprint/status :public-oss
- :itonami.blueprint/maturity :implemented}
+ :itonami.blueprint/maturity :implemented
+ :itonami.blueprint/implemented-slice
+ "CamelOpsAdvisor ⊣ Camelid Facility Operations Governor, langgraph-clj
+ StateGraph (langgraph.graph, camelops.operation/build), append-only
+ audit ledger (camelops.store/ledger + append-ledger!, MemStore). Fixes
+ a prior deferred-stub + fake-dependency combo: `deps.edn`'s top-level
+ `:deps` was literally `{}` -- the real `io.github.kotoba-lang/langgraph`
+ dependency only existed under the unused `:dev :override-deps` alias,
+ so no build that actually ran (`clojure -M:run`/`:test`, no `:dev`)
+ ever had langgraph on the classpath. `operation.cljc`'s own docstring
+ explicitly said \"langgraph-clj StateGraph integration is deferred...
+ This stub version [...] defines the high-level flow synchronously\" and
+ hand-rolled `run-operation` instead of using the real API -- yet this
+ blueprint still claimed `:itonami.blueprint/maturity :implemented`. No
+ audit ledger existed anywhere in the repo, and there was no CI
+ workflow. Now: a genuinely compiled StateGraph (`:intake -> :advise ->
+ :govern -> :decide -+-> :commit / :request-approval -> :commit /
+ :hold`) with `interrupt-before #{:request-approval}` + in-memory
+ checkpointer for real human-in-the-loop resume, and a real
+ `camelops.store/ledger` + `append-ledger!` (new in this fix -- no
+ ledger existed before) genuinely wired into the `:commit`, `:hold`,
+ and `:request-approval` (rejection) graph nodes. `camelops.advisor`'s
+ CamelOpsAdvisor, `camelops.governor`'s Camelid Facility Operations
+ Governor (facility registration, closed op allowlist, treatment/
+ slaughter-blocked, herd-count/fiber-yield plausibility, cost-threshold
+ escalation, always-escalate health concerns), `camelops.phase`'s 0->3
+ rollout gate (phase-0 forces every otherwise-committable proposal
+ through human approval, never an autonomous commit), and
+ `camelops.registry`/`camelops.facts`'s pure domain checks are ALL
+ reused UNCHANGED -- this fix only wires the existing camelid-raising
+ domain policy into a real compiled graph and a real ledger, it does not
+ redesign it. Proven end-to-end by `test/camelops/operation_test.cljc`
+ (ledger stays empty until a real commit or across an interrupted/
+ not-yet-approved run, hold-until-approved for the always-escalating
+ health-concern flag and a high-cost supply order, governor rejection
+ blocks commit for five independent HARD violations -- unregistered
+ facility, treatment/slaughter block, non-positive herd count, negative
+ fiber yield -- phase-0 forces human approval even for an otherwise-
+ clean proposal) through the REAL compiled graph, plus a
+ `clojure -M:dev:run` demo runner producing real ledger entries for
+ every scenario. 47 tests / 153 assertions green (`clojure
+ -M:dev:test`), clj-kondo 0 errors/0 warnings. CI
+ (`.github/workflows/ci.yml`, sibling-checkout pattern for `:local/root`
+ deps) was missing and is added in this fix."}
