@@ -4,24 +4,29 @@
  ;; in the kotoba-lang org of this workspace (transferred + renamed from
  ;; com-junkawasaki/langgraph-clj / com-junkawasaki/langchain-clj).
  ;;
+ ;; FIX (see blueprint.edn's :itonami.blueprint/implemented-slice for the
+ ;; full history): this used to be `:deps {}` -- the real langgraph
+ ;; dependency only lived under the unused `:dev :override-deps` alias,
+ ;; so `clojure -M:run`/`:test` (no `:dev`) never actually had langgraph
+ ;; on the classpath. It is now in the top-level `:deps` map that's
+ ;; ACTUALLY used (mirrors cloud-itonami-isic-869's `deps.edn`).
+ ;;
  ;; This camelid-raising vertical is SELF-CONTAINED: there is no
  ;; `kotoba-lang/camelid-raising` to delegate facility-registration /
  ;; cost-threshold / closed-op-allowlist checks to, so those pure functions
  ;; live in `camelops.registry` / `camelops.facts` rather than wrapping
  ;; an external lib. This repo is standalone (forkable outside the
- ;; workspace); the :local/root paths only resolve inside the monorepo
- ;; checkout -- a standalone fork should override them with git
- ;; coordinates. For testing/CI without langgraph, use the core logic in
- ;; run-operation; production deployment requires the langgraph StateGraph
- ;; integration.
- :deps {}
+ ;; workspace); the :local/root path only resolves inside the monorepo
+ ;; checkout -- a standalone fork should override it with git
+ ;; coordinates (see `io.github.kotoba-lang/langgraph`'s own `deps.edn`,
+ ;; which pins `langchain` via `:git/sha` for exactly this reason).
+ :deps {io.github.kotoba-lang/langgraph
+        {:local/root "../../kotoba-lang/langgraph"}}
  :aliases
  {;; offline workspace dev -- pin transitive langchain to local checkout
   :dev {:override-deps
         {io.github.kotoba-lang/langchain
-         {:local/root "../../kotoba-lang/langchain"}
-        io.github.kotoba-lang/langgraph
-        {:local/root "../../kotoba-lang/langgraph"}}}
+         {:local/root "../../kotoba-lang/langchain"}}}
   ;; clojure -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "camelops.sim"]}
   :test {:extra-paths ["test"]

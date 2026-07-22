@@ -42,3 +42,24 @@
           result (store/add-facility st "herd-001" updated)]
       (is (= updated result))
       (is (= updated (store/registered-facility st "herd-001"))))))
+
+(deftest ledger-contract
+  (testing "A fresh store's ledger is empty"
+    (let [st (store/mem-store)]
+      (is (vector? (store/ledger st)))
+      (is (empty? (store/ledger st)))))
+
+  (testing "append-ledger! is append-only and preserves insertion order"
+    (let [st (store/mem-store)
+          fact-1 {:t :committed :op :log-herd-record}
+          fact-2 {:t :governor-hold :op :order-supplies}]
+      (is (= fact-1 (store/append-ledger! st fact-1)))
+      (store/append-ledger! st fact-2)
+      (is (= [fact-1 fact-2] (store/ledger st)))
+      (is (= 2 (count (store/ledger st))))))
+
+  (testing "append-ledger! never mutates or removes prior entries"
+    (let [st (store/mem-store)]
+      (dotimes [n 5]
+        (store/append-ledger! st {:t :committed :n n}))
+      (is (= (range 5) (map :n (store/ledger st)))))))
