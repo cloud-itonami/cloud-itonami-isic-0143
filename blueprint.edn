@@ -1,4 +1,4 @@
-{:itonami.blueprint/id "cloud-itonami-0143"
+{:itonami.blueprint/id "cloud-itonami-isic-0143"
  :itonami.blueprint/name "Camelid-Raising Operations Coordination"
  :itonami.blueprint/isic-rev5 "0143"
  :itonami.blueprint/domain :agriculture/camelid-raising
