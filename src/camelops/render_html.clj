@@ -1,0 +1,119 @@
+(ns camelops.render-html
+  "Build-time HTML renderer for `docs/samples/operator-console.html`.
+
+  Closes flagship checklist item 2 (com-junkawasaki/root ADR-2607189300,
+  Wave5). Drives the REAL actor stack (`camelops.operation` ->
+  `camelops.governor` -> `camelops.store`) through a scenario adapted from
+  this repo's own `camelops.sim` demo driver (combined into one seeded
+  store), rendered deterministically -- no invented numbers/ids/ops.
+
+  Usage: `clojure -M:dev:render-html [out-file]`."
+  (:require [clojure.string :as str]
+            [camelops.store :as store]
+            [camelops.operation :as op]
+            [langgraph.graph :as g]))
+
+(defn- exec! [actor tid request ctx] (g/run* actor {:request request :context ctx} {:thread-id tid}))
+(defn- approve! [actor tid by] (g/run* actor {:approval {:status :approved :by by}} {:thread-id tid :resume? true}))
+(defn- reject!  [actor tid by] (g/run* actor {:approval {:status :rejected :by by}} {:thread-id tid :resume? true}))
+(def ^:private ctx #(hash-map :actor-id "camel-ops-01" :role :herder :phase %))
+
+(defn run-demo!
+  "Seeds herd-001 (a camelid ranch) plus references an unregistered
+  unknown-herd, then runs every disposition: a clean herd-record
+  (phase-3 auto-commit), a phase-0 record that escalates (herder approves),
+  an animal-health concern (always escalates -- vet approves), a high-cost
+  supply order (escalates -- ops-manager REJECTS), a log-herd-record against
+  the unregistered unknown-herd (HARD block), and an :order-slaughter
+  attempt (HARD block -- slaughter/culling is permanently out of scope).
+  No invented values."
+  []
+  (let [db (store/mem-store
+            {:initial-facilities
+             {"herd-001" {:id "herd-001" :name "Test Camelid Ranch" :species "alpaca"}}})
+        actor (op/build db)]
+    (exec! actor "t1" {:op :log-herd-record :facility-id "herd-001"
+                       :count 25 :fiber-yield 3.5} (ctx :phase-3))
+    (exec! actor "t2" {:op :log-herd-record :facility-id "herd-001" :count 25} (ctx :phase-0))
+    (approve! actor "t2" "herder-01")
+    (exec! actor "t3" {:op :flag-animal-health-concern :facility-id "herd-001"
+                       :concern "disease-suspected"} (ctx :phase-3))
+    (approve! actor "t3" "vet-01")
+    (exec! actor "t4" {:op :order-supplies :facility-id "herd-001" :cost 1000} (ctx :phase-3))
+    (reject! actor "t4" "ops-manager-01")
+    (exec! actor "t5" {:op :log-herd-record :facility-id "unknown-herd" :count 10} (ctx :phase-3))
+    (exec! actor "t6" {:op :order-slaughter :facility-id "herd-001"} (ctx :phase-3))
+    db))
+
+;; ----------------------------- rendering (esc copied verbatim from a known-good file) -----------------------------
+
+(defn- esc [v]
+  (-> (str v)
+      (str/replace "&" "&amp;")
+      (str/replace "<" "&lt;")
+      (str/replace ">" "&gt;")))
+
+(defn- hold-rule [f] (or (some-> f :basis first) (some-> f :violations first :rule)))
+(defn- last-fact-for [ledger fid] (last (filter #(= (:subject %) fid) ledger)))
+(defn- status-cell [ledger fid]
+  (let [f (last-fact-for ledger fid)]
+    (cond
+      (nil? f) "<span class=\"muted\">no activity</span>"
+      (= :committed (:t f)) "<span class=\"ok\">committed</span>"
+      (= :approval-granted (:t f)) "<span class=\"ok\">approved &amp; committed</span>"
+      (= :approval-rejected (:t f)) "<span class=\"critical\">rejected (hold)</span>"
+      (= :governor-hold (:t f))
+      (str "<span class=\"critical\">HARD hold &middot; " (esc (name (or (hold-rule f) :unknown))) "</span>")
+      (= :approval-requested (:t f)) "<span class=\"warn\">awaiting approval</span>"
+      :else "<span class=\"muted\">in progress</span>")))
+(defn- ledger-row [{:keys [t op subject disposition basis]}]
+  (format "        <tr><td>%s</td><td><code>%s</code></td><td>%s</td><td>%s</td></tr>"
+          (esc (name t)) (esc (name (or op :n-a))) (esc subject)
+          (esc (or (some->> basis (map name) (str/join ", ")) (some-> disposition name) ""))))
+(def ^:private action-gate-rows
+  ["        <tr><td><code>:log-herd-record</code></td><td><span class=\"ok\">auto-commit at phase-3 when clean + registered</span></td></tr>"
+   "        <tr><td><code>:flag-animal-health-concern</code></td><td><span class=\"warn\">ALWAYS human approval (animal welfare)</span></td></tr>"
+   "        <tr><td><code>:order-supplies</code></td><td><span class=\"warn\">human approval over cost threshold; recompute + reject path</span></td></tr>"
+   "        <tr><td><code>:order-slaughter</code></td><td><span class=\"critical\">HARD block -- slaughter/culling permanently out of scope</span></td></tr>"])
+(defn render [db]
+  (let [ledger (vec (store/ledger db))
+        f-ids ["herd-001" "unknown-herd"]
+        frow (fn [fid] (let [f (store/registered-facility db fid)]
+                         (format "        <tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
+                                 (esc fid) (esc (or (:name f) "(unregistered)"))
+                                 (esc (or (:species f) "—")) (status-cell ledger fid))))
+        facility-rows (str/join "\n" (map frow f-ids))
+        ledger-rows (str/join "\n" (map ledger-row ledger))]
+    (str
+     "<html><head><meta charset=\"utf-8\"><title>cloud-itonami-isic-0143 &middot; camelid ranching ops</title><style>"
+     "body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:0;color:#1a1a1a;background:#f5f5f5}"
+     ".bar{background:#3a2a1a;color:#fff;padding:1.2rem 2rem}.bar h1{margin:0;font-size:1.15rem;font-weight:600}"
+     ".badge{display:inline-block;margin-top:.4rem;font-size:.75rem;opacity:.8}"
+     "main{max-width:980px;margin:1.5rem auto;padding:0 1rem}"
+     ".card{background:#fff;border-radius:8px;padding:1.2rem 1.4rem;margin-bottom:1.2rem;box-shadow:0 1px 3px rgba(0,0,0,.08)}"
+     ".card h2{margin-top:0;font-size:1rem}.muted{color:#777;font-size:.82rem}"
+     "table{border-collapse:collapse;width:100%;font-size:.85rem}th,td{text-align:left;padding:.42rem .5rem;border-bottom:1px solid #eee}th{font-weight:600;color:#555}"
+     ".ok{color:#0a7d33}.warn{color:#9a6700}.critical{color:#b41010;font-weight:600}code{background:#f0f0f0;padding:.1rem .3rem;border-radius:3px;font-size:.8rem}"
+     "</style></head><body>\n"
+     "<header class=\"bar\">\n  <h1>Camelid ranching ops (ISIC 0143) — Operator Console</h1>\n"
+     "  <span class=\"badge\">read-only sample · governor-gated · animal-welfare always human-approved · slaughter permanently blocked · unregistered facilities HARD-blocked</span>\n</header>\n"
+     "<main>\n  <section class=\"card\">\n    <h2>Scenario facilities</h2>\n"
+     "    <p class=\"muted\">Demo snapshot — build-time-generated from <code>camelops.store</code> via <code>camelops.render-html</code> (<code>clojure -M:dev:render-html</code>), regenerated nightly. No invented data.</p>\n"
+     "    <table>\n      <thead><tr><th>Facility</th><th>Name</th><th>Species</th><th>Last op status</th></tr></thead>\n      <tbody>\n"
+     facility-rows "\n      </tbody>\n    </table>\n  </section>\n"
+     "  <section class=\"card\">\n    <h2>Action gate (CamelOps Governor)</h2>\n"
+     "    <p class=\"muted\">HARD blocks cannot be overridden. Slaughter/culling is never coordinated; unregistered facilities are rejected before any human.</p>\n"
+     "    <table>\n      <thead><tr><th>Op</th><th>Gate</th></tr></thead>\n      <tbody>\n"
+     (str/join "\n" action-gate-rows) "\n      </tbody>\n    </table>\n  </section>\n"
+     "  <section class=\"card\">\n    <h2>Audit ledger (this run)</h2>\n"
+     "    <p class=\"muted\">Append-only decision-fact log — every proposal, hold and commit this scenario produced.</p>\n"
+     "    <table>\n      <thead><tr><th>Fact</th><th>Op</th><th>Subject</th><th>Basis</th></tr></thead>\n      <tbody>\n"
+     ledger-rows "\n      </tbody>\n    </table>\n  </section>\n"
+     "</main>\n</body></html>\n")))
+(defn -main [& args]
+  (let [out (or (first args) "docs/samples/operator-console.html")
+        db (run-demo!)
+        out-file (java.io.File. out)]
+    (.. out-file getParentFile mkdirs)
+    (spit out-file (render db))
+    (println "wrote" out "(" (count (store/ledger db)) "ledger facts )")))
