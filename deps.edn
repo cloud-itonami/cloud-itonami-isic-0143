@@ -5,12 +5,7 @@
  ;; com-junkawasaki/langgraph-clj / com-junkawasaki/langchain-clj).
  ;;
  ;; FIX (see blueprint.edn's :itonami.blueprint/implemented-slice for the
- ;; full history): this used to be `:deps {
-        ;; kotoba.lang.text, not clojure.string. Pinned as an explicit floor:
-        ;; tools.deps takes the NEWEST sha it is shown, so without a floor here
-        ;; this repo silently rides whatever a sibling happens to name.
-        io.github.kotoba-lang/text {:git/sha "73bdb13ae7a3d004b44bca08be03a3191157a38f"}
-       }` -- the real langgraph
+ ;; full history): this used to be `:deps {}` -- the real langgraph
  ;; dependency only lived under the unused `:dev :override-deps` alias,
  ;; so `clojure -M:run`/`:test` (no `:dev`) never actually had langgraph
  ;; on the classpath. It is now in the top-level `:deps` map that's
@@ -25,7 +20,12 @@
  ;; checkout -- a standalone fork should override it with git
  ;; coordinates (see `io.github.kotoba-lang/langgraph`'s own `deps.edn`,
  ;; which pins `langchain` via `:git/sha` for exactly this reason).
- :deps {io.github.kotoba-lang/langgraph
+ :deps {
+        ;; kotoba.lang.text, not clojure.string. Pinned as an explicit floor:
+        ;; tools.deps takes the NEWEST sha it is shown, so without a floor here
+        ;; this repo silently rides whatever a sibling happens to name.
+        io.github.kotoba-lang/text {:git/sha "73bdb13ae7a3d004b44bca08be03a3191157a38f"}
+       io.github.kotoba-lang/langgraph
         {:local/root "../../kotoba-lang/langgraph"}}
  :aliases
  {;; offline workspace dev -- pin transitive langchain to local checkout
