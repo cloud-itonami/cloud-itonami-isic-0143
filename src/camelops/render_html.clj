@@ -8,7 +8,7 @@
   store), rendered deterministically -- no invented numbers/ids/ops.
 
   Usage: `clojure -M:dev:render-html [out-file]`."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [camelops.store :as store]
             [camelops.operation :as op]
             [langgraph.graph :as g]))
