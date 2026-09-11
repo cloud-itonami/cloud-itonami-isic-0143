@@ -7,7 +7,7 @@
   this repo's own `camelops.sim` demo driver (combined into one seeded
   store), rendered deterministically -- no invented numbers/ids/ops.
 
-  Usage: `clojure -M:dev:render-html [out-file]`."
+  Usage: `kbb -M:dev:render-html [out-file]`."
   (:require [kotoba.lang.text :as str]
             [camelops.store :as store]
             [camelops.operation :as op]
@@ -98,7 +98,7 @@
      "<header class=\"bar\">\n  <h1>Camelid ranching ops (ISIC 0143) — Operator Console</h1>\n"
      "  <span class=\"badge\">read-only sample · governor-gated · animal-welfare always human-approved · slaughter permanently blocked · unregistered facilities HARD-blocked</span>\n</header>\n"
      "<main>\n  <section class=\"card\">\n    <h2>Scenario facilities</h2>\n"
-     "    <p class=\"muted\">Demo snapshot — build-time-generated from <code>camelops.store</code> via <code>camelops.render-html</code> (<code>clojure -M:dev:render-html</code>), regenerated nightly. No invented data.</p>\n"
+     "    <p class=\"muted\">Demo snapshot — build-time-generated from <code>camelops.store</code> via <code>camelops.render-html</code> (<code>kbb -M:dev:render-html</code>), regenerated nightly. No invented data.</p>\n"
      "    <table>\n      <thead><tr><th>Facility</th><th>Name</th><th>Species</th><th>Last op status</th></tr></thead>\n      <tbody>\n"
      facility-rows "\n      </tbody>\n    </table>\n  </section>\n"
      "  <section class=\"card\">\n    <h2>Action gate (CamelOps Governor)</h2>\n"

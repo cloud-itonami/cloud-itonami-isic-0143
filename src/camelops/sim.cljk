@@ -1,5 +1,5 @@
 (ns camelops.sim
-  "Demo driver -- `clojure -M:run` / `clojure -M:dev:run`. Drives the
+  "Demo driver -- `kbb -M:run` / `kbb -M:dev:run`. Drives the
   REAL compiled `langgraph-clj` `StateGraph` (`camelops.operation/
   build`) end-to-end through a phase-3 auto-commit, a phase-0
   escalate-then-approve, an always-escalate health-concern flag, a

@@ -17,7 +17,7 @@
  a prior deferred-stub + fake-dependency combo: `deps.edn`'s top-level
  `:deps` was literally `{}` -- the real `io.github.kotoba-lang/langgraph`
  dependency only existed under the unused `:dev :override-deps` alias,
- so no build that actually ran (`clojure -M:run`/`:test`, no `:dev`)
+ so no build that actually ran (`kbb -M:run`/`:test`, no `:dev`)
  ever had langgraph on the classpath. `operation.cljc`'s own docstring
  explicitly said \"langgraph-clj StateGraph integration is deferred...
  This stub version [...] defines the high-level flow synchronously\" and
@@ -48,7 +48,7 @@
  facility, treatment/slaughter block, non-positive herd count, negative
  fiber yield -- phase-0 forces human approval even for an otherwise-
  clean proposal) through the REAL compiled graph, plus a
- `clojure -M:dev:run` demo runner producing real ledger entries for
+ `kbb -M:dev:run` demo runner producing real ledger entries for
  every scenario. 47 tests / 153 assertions green (`clojure
  -M:dev:test`), clj-kondo 0 errors/0 warnings. CI
  (`.github/workflows/ci.yml`, sibling-checkout pattern for `:local/root`

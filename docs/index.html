@@ -2463,7 +2463,7 @@ code { font-family: var(--font-family-mono); background: var(--color-neutral-sol
         <div class="pf-pitch">
           <p>Open Occupation Blueprint for ISIC Rev. 4 0143: Raising of camels and camelids.</p>
           <p>This repository implements a forkable OSS camelid-raising operations coordinator: a facility-management and record-keeping robot manages herd logging (count/weight/health-check/fiber-yield), veterinary appointment scheduling, and supply procurement under a governor-gated actor, so a camel/llama/alpaca operation keeps its own operational records and maintains full transparency over decisions.</p>
-          <p>Maturity: :implemented. src/camelops/ implements the CamelOpsAdvisor (camelops.advisor) and the independent Camelid Facility Operations Governor (camelops.governor), composed by camelops.operation following the itonami actor pattern (ADR-2607011000): advise -&gt; govern -&gt; phase-gate -&gt; commit | escalate | hold. 35 tests / 106 assertions green (clojure -M:test).</p>
+          <p>Maturity: :implemented. src/camelops/ implements the CamelOpsAdvisor (camelops.advisor) and the independent Camelid Facility Operations Governor (camelops.governor), composed by camelops.operation following the itonami actor pattern (ADR-2607011000): advise -&gt; govern -&gt; phase-gate -&gt; commit | escalate | hold. 35 tests / 106 assertions green (kbb -M:test).</p>
         </div>
       </div>
       <p class="pf-meta">Domain <code>agriculture/camelid-raising</code> · Governor <code>camelid-facility-operations-governor</code> · License <code>AGPL-3.0-or-later</code></p>
