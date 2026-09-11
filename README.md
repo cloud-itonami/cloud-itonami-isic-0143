@@ -14,7 +14,7 @@ maintains full transparency over decisions.
 Facility Operations Governor` (`camelops.governor`), composed by
 `camelops.operation` following the itonami actor pattern (ADR-2607011000):
 `advise -> govern -> phase-gate -> commit | escalate | hold`. 35 tests /
-106 assertions green (`clojure -M:test`).
+106 assertions green (`kbb -M:test`).
 
 `camelops.operation` is a synchronous stub of this flow (see its
 docstring) — production wiring into a `langgraph-clj` StateGraph with
@@ -116,7 +116,7 @@ fiber-yield-specific check for this fiber-producing (llama/alpaca) vertical:
 - `camelops.governor` — Camelid Facility Operations Governor: hard invariants + escalation gates
 - `camelops.phase` — 0→3 rollout phase gate
 - `camelops.operation` — composes advisor → governor → phase into one operation run
-- `camelops.sim` — demo runner (`clojure -M:run`)
+- `camelops.sim` — demo runner (`kbb -M:run`)
 
 ## Capability layer
 
@@ -134,9 +134,9 @@ See [`docs/business-model.md`](docs/business-model.md) and
 ## Testing
 
 ```bash
-clojure -M:test   # 35 tests / 106 assertions
-clojure -M:lint   # clj-kondo, 0 errors / 0 warnings
-clojure -M:run    # demo runner
+kbb -M:test   # 35 tests / 106 assertions
+kbb -M:lint   # clj-kondo, 0 errors / 0 warnings
+kbb -M:run    # demo runner
 ```
 
 ## License
