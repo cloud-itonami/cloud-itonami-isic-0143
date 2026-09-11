@@ -40,7 +40,7 @@
  `camelops.registry`/`camelops.facts`'s pure domain checks are ALL
  reused UNCHANGED -- this fix only wires the existing camelid-raising
  domain policy into a real compiled graph and a real ledger, it does not
- redesign it. Proven end-to-end by `test/camelops/operation_test.cljc`
+ redesign it. Proven end-to-end by `test/camelops/operation_test.cljk`
  (ledger stays empty until a real commit or across an interrupted/
  not-yet-approved run, hold-until-approved for the always-escalating
  health-concern flag and a high-cost supply order, governor rejection
