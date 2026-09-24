@@ -1,0 +1,32 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:dev:physics` runs it.
+;;
+;; README "Robotics premise": a facility-management robot keeps herd records
+;; (count, weight, health, fibre yield), schedules appointments and handles
+;; supplies for a camel and camelid farm (ISIC 0143). Its physical work:
+;; carrying water across sand to the herd's trough, and emptying the water
+;; tank into the trough.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isic-0143"
+ :cases
+ [{:id :water-across-sand-to-trough
+   :kind :transport
+   :procedure "tracked carrier drives a water load across loose sand from the well to the herd's trough"
+   :params {:mass-kg 400.0 :distance-m 500.0 :v-max-mps 1.5 :a-max-mps2 0.4
+            :brake-decel-mps2 0.8 :drive-force-n 2500.0 :crr 0.20
+            :cog-height-m 0.80 :support-half-length-m 0.70 :max-time-s 7200.0}
+   :sweep {:param :payload-kg :values [200.0 400.0 600.0 800.0 1000.0]}
+   :quantity :cycle-time-s
+   :limit {:max 400.0 :basis "estimate: one water run inside the herd's midday watering window (loose-sand rolling resistance 0.2 is also an estimate)"}
+   :boundary {:lo 50.0 :hi 1500.0}}
+  {:id :water-tank-into-trough
+   :kind :tank-drain
+   :procedure "the carrier's 1,500-litre water tank gravity-drains through its hose outlet into the trough"
+   :params {:tank-area-m2 1.25 :h0-m 1.2 :h-target-m 0.05 :cd 0.62 :dt-s 0.5 :max-time-s 86400.0}
+   :sweep {:param :orifice-area-m2 :values [0.00049 0.00080 0.00126 0.00196 0.00314]}
+   :quantity :time-to-target-s
+   :limit {:max 900.0 :basis "estimate: tank emptied within 15 minutes so the carrier can make the next run"}
+   :boundary {:lo 0.0002 :hi 0.01}}]}
